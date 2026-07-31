@@ -1,0 +1,34 @@
+services:
+  mongodb:
+    image: mongo:4.4
+    container_name: mongodb
+
+    ports:
+      - "27017:27017"
+
+    volumes:
+      - mongo-data:/data/db
+
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./app/backend
+      dockerfile: ../../docker/backend/Dockerfile
+
+    container_name: backend
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      PORT: 3000
+      MONGO_URL: mongodb://mongodb:27017/expense
+
+    depends_on:
+      - mongodb
+
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
