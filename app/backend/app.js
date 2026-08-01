@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import cors from "cors";
 import { connectDB } from "./DB/Database.js";
 import bodyParser from "body-parser";
@@ -43,6 +44,28 @@ app.use("/api/auth", userRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
+});
+
+// Health Check
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "UP",
+    message: "Expense Tracker Backend is healthy",
+  });
+});
+
+app.get("/ready", (req, res) => {
+  if (mongoose.connection.readyState === 1) {
+    return res.status(200).json({
+      status: "READY",
+      database: "CONNECTED",
+    });
+  }
+
+  return res.status(503).json({
+    status: "NOT READY",
+    database: "DISCONNECTED",
+  });
 });
 
 app.listen(port, () => {
