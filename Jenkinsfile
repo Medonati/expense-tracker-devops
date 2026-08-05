@@ -25,10 +25,10 @@ pipeline {
 
         stage('Checkout Source') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/Medonati/expense-tracker-devops.git'
+                checkout scm
             }
         }
+		
 
         stage('Install Dependencies') {
             steps {
