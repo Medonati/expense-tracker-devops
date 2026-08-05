@@ -23,13 +23,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout Source') {
-            steps {
-                checkout scm
-            }
-        }
-		
-
         stage('Install Dependencies') {
             steps {
                 dir('app/backend') {
