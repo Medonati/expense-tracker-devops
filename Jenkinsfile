@@ -31,6 +31,23 @@ pipeline {
             }
         }
 
+        stage('Application Validation') {
+            steps {
+                dir('app/backend') {
+                    sh 'npm run validate'
+                }
+            }
+			
+			post {
+			    success {
+				    echo '✅ Application validation passed.'    
+				}
+				failure {
+				    echo '❌ Application validation failed.'
+				}
+			}
+        }
+
         stage('Verify Environment') {
             steps {
                 dir('app/backend') {
