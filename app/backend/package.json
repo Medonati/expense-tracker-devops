@@ -5,10 +5,10 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
-    "validate": "node --check app.js"
-  },
+  "start": "APP_ENV=local node server.js",
+  "dev": "APP_ENV=local nodemon server.js",
+  "validate": "node --check app.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
