@@ -1,17 +1,18 @@
 /*
  * Expense Tracker DevOps
- * Jenkins CI Pipeline (Version 1)
+ * Jenkins Continuous Integration Pipeline
  *
- * Current stages:
- * - Checkout Source
- * - Install Dependencies
- * - Verify Environment
+ * Purpose:
+ * - Install project dependencies
+ * - Verify build environment
+ * - Validate application source
+ * - Run automated integration tests
  *
- * Future stages:
- * - Run Tests
- * - Build Docker Image
+ * Upcoming Stages
+ * - Docker Build
+ * - Image Security Scan
  * - Push Image
- * - Deploy
+ * - Deployment
  */
 
 pipeline {
@@ -46,6 +47,24 @@ pipeline {
 				    echo '❌ Application validation failed.'
 				}
 			}
+        }
+		
+		stage('Run Tests') {
+            steps {
+                dir('app/backend') {
+                    sh 'npm test'
+                }
+            }
+
+            post {
+                success {
+                    echo '✅ All automated tests passed.'
+                }
+
+                failure {
+                    echo '❌ Automated tests failed.'
+                }
+            }
         }
 
         stage('Verify Environment') {

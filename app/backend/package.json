@@ -5,10 +5,11 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-  "start": "APP_ENV=local node server.js",
-  "dev": "APP_ENV=local nodemon server.js",
-  "validate": "node --check app.js"
-},
+    "start": "APP_ENV=local node server.js",
+    "dev": "APP_ENV=local nodemon server.js",
+    "validate": "node --check app.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -25,7 +26,11 @@
     "moment": "^2.29.4",
     "mongoose": "^7.0.3",
     "morgan": "^1.10.0",
-    "nodemon": "^2.0.22",
     "validator": "^13.9.0"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
   }
 }
