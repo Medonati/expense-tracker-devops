@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "expense-tracker-backend"
+        IMAGE_NAME = "medonati/expense-tracker-backend"
         IMAGE_TAG  = "1.0.0"
     }
 
