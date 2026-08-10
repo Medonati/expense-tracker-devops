@@ -108,7 +108,44 @@ pipeline {
                 }
             }
         }
+		
+		
+		// Authenticate with Docker Hub and push the Docker artifact.
+		stage('Push Docker Image') {
+			steps {
+				withCredentials([
+					usernamePassword(
+						credentialsId: 'dockerhub-credentials',
+						usernameVariable: 'DOCKER_USERNAME',
+						passwordVariable: 'DOCKER_PASSWORD'
+					)
+				]) {
+					sh '''
+						echo "$DOCKER_PASSWORD" | docker login \
+							--username "$DOCKER_USERNAME" \
+							--password-stdin
+
+						docker push ${IMAGE_NAME}:${IMAGE_TAG}
+					'''
+				}
+			
+		}
+		
+		    post {
+				success {
+					echo '✅ Docker image pushed successfully.'
+				}
+
+				failure {
+					echo '❌ Docker image push failed.'
+				}
+			}
+		}
+			
+		
     }
+	
+	    
 
     post {
 
