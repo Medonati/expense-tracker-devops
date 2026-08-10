@@ -1,22 +1,10 @@
-/*
- * Expense Tracker DevOps
- * Jenkins Continuous Integration Pipeline
- *
- * Purpose:
- * - Install project dependencies
- * - Verify build environment
- * - Validate application source
- * - Run automated integration tests
- *
- * Upcoming Stages
- * - Docker Build
- * - Image Security Scan
- * - Push Image
- * - Deployment
- */
-
 pipeline {
     agent any
+
+    environment {
+        IMAGE_NAME = "expense-tracker-backend"
+        IMAGE_TAG  = "1.0.0"
+    }
 
     tools {
         nodejs 'node22'
@@ -24,32 +12,45 @@ pipeline {
 
     stages {
 
+        // Install all project dependencies using package-lock.json.
         stage('Install Dependencies') {
             steps {
                 dir('app/backend') {
-                    sh 'npm install'
+                    sh 'npm ci'
                 }
             }
         }
 
-        stage('Application Validation') {
+        // Verify the required build tools are available.
+        stage('Verify Environment') {
+            steps {
+                sh 'node --version'
+                sh 'npm --version'
+                sh 'docker --version'
+            }
+        }
+
+        // Validate the application source code.
+        stage('Validate Source') {
             steps {
                 dir('app/backend') {
                     sh 'npm run validate'
                 }
             }
-			
-			post {
-			    success {
-				    echo '✅ Application validation passed.'    
-				}
-				failure {
-				    echo '❌ Application validation failed.'
-				}
-			}
+
+            post {
+                success {
+                    echo '✅ Application validation passed.'
+                }
+
+                failure {
+                    echo '❌ Application validation failed.'
+                }
+            }
         }
-		
-		stage('Run Tests') {
+
+        // Execute automated integration tests.
+        stage('Run Tests') {
             steps {
                 dir('app/backend') {
                     sh 'npm test'
@@ -67,23 +68,56 @@ pipeline {
             }
         }
 
-        stage('Verify Environment') {
+        // Build the Docker image after all quality checks pass.
+        stage('Build Docker Image') {
             steps {
-                dir('app/backend') {
-                    sh 'node --version'
-                    sh 'npm --version'
+                sh """
+                    docker build \
+                      -t ${IMAGE_NAME}:${IMAGE_TAG} \
+                      -f docker/backend/Dockerfile \
+                      app/backend
+                """
+            }
+
+            post {
+                success {
+                    echo '✅ Docker image built successfully.'
+                }
+
+                failure {
+                    echo '❌ Docker image build failed.'
+                }
+            }
+        }
+
+        // Verify the Docker artifact exists.
+        stage('Verify Docker Artifact') {
+            steps {
+                sh """
+                    docker images | grep ${IMAGE_NAME}
+                """
+            }
+
+            post {
+                success {
+                    echo '✅ Docker artifact verified.'
+                }
+
+                failure {
+                    echo '❌ Docker artifact verification failed.'
                 }
             }
         }
     }
 
     post {
+
         success {
-            echo '✅ Pipeline completed successfully.'
+            echo '🎉 Jenkins pipeline completed successfully.'
         }
 
         failure {
-            echo '❌ Pipeline failed.'
+            echo '❌ Jenkins pipeline failed.'
         }
 
         always {

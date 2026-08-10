@@ -1,0 +1,28 @@
+# Dependencies
+node_modules
+
+# Git
+.git
+.gitignore
+
+# Tests (Jenkins runs them, Docker doesn't)
+tests
+
+# Coverage reports
+coverage
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode
+.idea
+
+# Environment files in project root (not our config folder)
+.env
+.env.*
