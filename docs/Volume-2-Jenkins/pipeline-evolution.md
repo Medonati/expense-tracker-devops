@@ -131,6 +131,41 @@ Keeping an additional checkout stage results in the repository being checked out
 * Improve pipeline readability.
 * Rely on Jenkins' default Declarative Pipeline behavior.
 
+
+## Version 6 – Application Validation
+
+### Change
+
+Added an Application Validation stage and stage-level post actions.
+
+```diff
++stage('Application Validation') {
++    steps {
++        dir('app/backend') {
++            sh 'npm run validate'
++        }
++    }
++
++    post {
++        success {
++            echo '✅ Application validation passed.'
++        }
++
++        failure {
++            echo '❌ Application validation failed.'
++        }
++    }
++}
+```
+
+### Why
+
+Introduce the first CI quality gate and provide clear feedback in the Jenkins console output.
+
+### Outcome
+
+The pipeline now validates the application syntax and clearly reports whether validation succeeded or failed.
+
 ---
 
 # Lessons Learned
