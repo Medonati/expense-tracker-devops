@@ -1,9 +1,22 @@
+/*
+ * Expense Tracker DevOps
+ * Jenkins Continuous Integration & Release Pipeline
+ *
+ * Purpose:
+ * - Install project dependencies
+ * - Verify build environment
+ * - Validate application source
+ * - Run automated integration tests
+ * - Build versioned Docker release artifacts
+ * - Verify Docker artifacts
+ * - Publish release artifacts to Docker Hub
+ */
+
 pipeline {
     agent any
 
     environment {
         IMAGE_NAME = "medonati/expense-tracker-backend"
-        IMAGE_TAG  = "1.0.0"
     }
 
     tools {
@@ -68,8 +81,43 @@ pipeline {
             }
         }
 
-        // Build the Docker image after all quality checks pass.
+        /*
+         * Determine Docker image version from the Git release tag.
+         *
+         * Example:
+         * v1.0.0 → 1.0.0
+         * v1.0.1 → 1.0.1
+         */
+        stage('Determine Release Version') {
+            when {
+                buildingTag()
+            }
+
+            steps {
+                script {
+                    def gitTag = sh(
+                        script: 'git describe --tags --exact-match',
+                        returnStdout: true
+                    ).trim()
+
+                    if (!gitTag.startsWith('v')) {
+                        error "❌ Expected a release tag starting with 'v', but found: ${gitTag}"
+                    }
+
+                    env.IMAGE_TAG = gitTag.substring(1)
+
+                    echo "🏷️ Git release tag: ${gitTag}"
+                    echo "📦 Docker image tag: ${env.IMAGE_TAG}"
+                }
+            }
+        }
+
+        // Build the Docker image for a tagged release.
         stage('Build Docker Image') {
+            when {
+                buildingTag()
+            }
+
             steps {
                 sh """
                     docker build \
@@ -90,8 +138,12 @@ pipeline {
             }
         }
 
-        // Verify the Docker artifact exists.
+        // Verify that the versioned Docker artifact exists locally.
         stage('Verify Docker Artifact') {
+            when {
+                buildingTag()
+            }
+
             steps {
                 sh """
                     docker images | grep ${IMAGE_NAME}
@@ -108,47 +160,44 @@ pipeline {
                 }
             }
         }
-		
-		
-		// Authenticate with Docker Hub and push the Docker artifact.
-		stage('Push Docker Image') {
-			steps {
-				withCredentials([
-					usernamePassword(
-						credentialsId: 'dockerhub-credentials',
-						usernameVariable: 'DOCKER_USERNAME',
-						passwordVariable: 'DOCKER_PASSWORD'
-					)
-				]) {
-					sh '''
-						echo "$DOCKER_PASSWORD" | docker login \
-							--username "$DOCKER_USERNAME" \
-							--password-stdin
 
-						docker push ${IMAGE_NAME}:${IMAGE_TAG}
-					'''
-				}
-			
-		}
-		
-		    post {
-				success {
-					echo '✅ Docker image pushed successfully.'
-				}
+        // Authenticate with Docker Hub and publish the versioned release artifact.
+        stage('Push Docker Image') {
+            when {
+                buildingTag()
+            }
 
-				failure {
-					echo '❌ Docker image push failed.'
-				}
-			}
-		}
-			
-		
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
+                    sh '''
+                        echo "$DOCKER_PASSWORD" | docker login \
+                            --username "$DOCKER_USERNAME" \
+                            --password-stdin
+
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                    '''
+                }
+            }
+
+            post {
+                success {
+                    echo '✅ Docker image pushed successfully.'
+                }
+
+                failure {
+                    echo '❌ Docker image push failed.'
+                }
+            }
+        }
     }
-	
-	    
 
     post {
-
         success {
             echo '🎉 Jenkins pipeline completed successfully.'
         }
