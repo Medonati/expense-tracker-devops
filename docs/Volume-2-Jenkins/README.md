@@ -1,56 +1,68 @@
-# Volume 2 – Jenkins Continuous Integration
+# Volume 2 – Jenkins CI
 
 ## Overview
 
-This volume documents my journey of learning **Jenkins** as a Continuous Integration (CI) platform within my DevOps lab.
+This volume documents my journey of learning Jenkins as a Continuous Integration (CI) platform.
 
-The goal is not only to build working pipelines, but to understand the engineering decisions behind them. Each milestone captures the implementation, troubleshooting process, architectural choices, and lessons learned while gradually evolving a simple Jenkins pipeline into one capable of producing deployable software artifacts.
+The focus is on understanding how Jenkins automates software validation, how pipelines are designed, how failures are investigated, and how CI pipelines can produce deployable artifacts.
+
+Unlike traditional tutorials, this documentation captures both the implementation and the engineering decisions made throughout the learning process.
 
 ---
 
-# Learning Objectives
-
-Throughout this volume I explored:
+## What I Learned
 
 * Jenkins architecture and core components
-* Continuous Integration (CI) principles
-* Pipeline as Code
+* Continuous Integration fundamentals
+* Pipeline Jobs vs Freestyle Jobs
 * Jenkins Tool Management
-* Automated dependency installation
-* Application validation
-* Automated testing with Jest
+* Pipeline as Code
+* Jenkinsfiles
+* Jenkins Pipeline from SCM
+* Dependency installation
+* Source validation
+* Automated testing
+* Jenkins/Docker integration
 * Docker artifact creation
-* Docker artifact verification
-* Pipeline troubleshooting and debugging
-* CI pipeline evolution and design
+* Docker image verification
+* Docker Hub authentication
+* Jenkins Credentials Store
+* Docker image publishing
+* Authentication vs authorization
+* Reading and troubleshooting pipeline logs
 
 ---
 
-# Current Pipeline
+## Pipeline Overview
 
 ```text
 Developer
-      │
-      ▼
+    │
+    ▼
 GitHub Repository
-      │
-      ▼
+    │
+    ▼
 Jenkins Pipeline
-      │
-      ├── Install Dependencies
-      ├── Verify Environment
-      ├── Validate Source
-      ├── Run Tests
-      ├── Build Docker Image
-      └── Verify Docker Artifact
+    │
+    ├── Install Dependencies
+    ├── Verify Environment
+    ├── Validate Source
+    ├── Run Tests
+    ├── Build Docker Image
+    ├── Verify Docker Artifact
+    ├── Authenticate with Docker Hub
+    └── Push Docker Image
               │
               ▼
-     Versioned Docker Artifact
+Docker Hub
+              │
+              ▼
+medonati/expense-tracker-backend:1.0.0
 ```
 
 ---
 
-# Repository Structure
+## Repository Structure
 
 ```text
 Volume-2-Jenkins/
@@ -58,51 +70,63 @@ Volume-2-Jenkins/
 ├── 01-continuous-integration.md
 ├── 02-automated-testing.md
 ├── 03-docker-artifacts.md
-├── architecture.md
-├── reflection.md
+├── first-pipeline.md
+├── troubleshooting.md
 └── images/
 ```
 
 ---
 
-# Progress
+## Progress
 
-* ✅ Jenkins Installation
-* ✅ Jenkins Administration
-* ✅ Jenkins Tool Management
-* ✅ Pipeline as Code
-* ✅ Pipeline from SCM
-* ✅ Automated Dependency Installation
-* ✅ Source Validation
-* ✅ Automated Testing
-* ✅ Docker Artifact Creation
-* ✅ Docker Artifact Verification
-
-### Upcoming Milestones
-
-* ⏳ Image Security Scanning
-* ⏳ Container Registry Integration
-* ⏳ Image Versioning Strategy
-* ⏳ Continuous Deployment
-* ⏳ Kubernetes Deployment
-
----
-
-# Key Takeaways
-
-Throughout this volume I learned that:
-
-* Continuous Integration is more than running builds—it produces trusted software artifacts.
-* Pipelines should evolve incrementally, with each stage introducing a single new responsibility.
-* Docker images become versioned build outputs that form the foundation of Continuous Delivery.
-* Linux permissions are an important part of CI infrastructure, particularly when integrating Jenkins with Docker.
-* Environment variables improve maintainability by centralizing pipeline configuration.
-* Every engineering decision should be supported by documentation, evidence, and measurable outcomes.
+✅ Jenkins Installation
+✅ Jenkins Administration
+✅ Jenkins Tool Management
+✅ First Pipeline
+✅ Pipeline from SCM
+✅ Continuous Integration
+✅ Automated Testing
+✅ Jenkins Docker Access
+✅ Docker Build Stage
+✅ Docker Artifact Verification
+✅ Docker Hub Repository
+✅ Docker Hub Credentials
+✅ Docker Image Push
+⏳ Artifact Management & Versioning
+⏳ Image Security Scanning
+⏳ Continuous Delivery
+⏳ Deployment
 
 ---
 
-# Volume Summary
+## Current Artifact
 
-At the completion of this volume, the Jenkins pipeline is capable of validating the application, executing automated tests, building a Docker image, and verifying that the artifact has been successfully created.
+```text
+medonati/expense-tracker-backend:1.0.0
+```
 
-This establishes a strong Continuous Integration foundation for the next phase of the project: publishing artifacts to a container registry and automating deployments.
+The image is successfully published to Docker Hub by Jenkins.
+
+---
+
+## Key Takeaways
+
+CI is about validating code automatically before integration.
+
+Automation should be based on a process that is already understood manually.
+
+Jenkins plugins extend Jenkins capabilities, but understanding the underlying process is more important than relying on plugins as black boxes.
+
+Build failures are opportunities to improve the pipeline.
+
+Credentials should be managed securely and should never be committed to source control.
+
+A Docker image can be built locally without being published to a registry.
+
+A registry provides centralized storage and distribution for container artifacts.
+
+The image name identifies the intended repository, while credentials provide authentication and authorization.
+
+Pipeline configuration should eventually be stored alongside the application code.
+
+The goal of CI is not simply to produce a successful build, but to produce a reliable and traceable artifact that can progress toward deployment.
