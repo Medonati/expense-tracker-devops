@@ -123,21 +123,21 @@ pipeline {
 
         // Build the Docker image for a tagged release.
 		// Embed release and Git commit metadata for artifact traceability.
-        stage('Build Docker Image') {
+		stage('Build Docker Image') {
 			when {
 				buildingTag()
 			}
 
 			steps {
-				sh """
+				sh '''
 					docker build \
-					  --build-arg VERSION=${IMAGE_TAG} \
-					  --build-arg GIT_COMMIT=${GIT_COMMIT} \
-					  --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
-					  -t ${IMAGE_NAME}:${IMAGE_TAG} \
+					  --build-arg VERSION="$IMAGE_TAG" \
+					  --build-arg GIT_COMMIT="$GIT_COMMIT" \
+					  --build-arg BUILD_DATE="$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+					  -t "$IMAGE_NAME:$IMAGE_TAG" \
 					  -f docker/backend/Dockerfile \
 					  app/backend
-				"""
+				'''
 			}
 
 			post {
