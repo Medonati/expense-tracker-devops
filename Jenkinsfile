@@ -87,6 +87,9 @@ pipeline {
          * Example:
          * v1.0.0 → 1.0.0
          * v1.0.1 → 1.0.1
+		 * The Git commit is also captured so the Docker artifact
+         * can later be traced back to the exact source code
+         * that produced it.
          */
         stage('Determine Release Version') {
             when {
@@ -105,9 +108,15 @@ pipeline {
                     }
 
                     env.IMAGE_TAG = gitTag.substring(1)
+					
+					env.GIT_COMMIT = sh(
+					    script: 'git rev-parse HEAD',
+						returnStdout: true
+					).trim()
 
                     echo "🏷️ Git release tag: ${gitTag}"
                     echo "📦 Docker image tag: ${env.IMAGE_TAG}"
+					echo "🔗 Git commit: ${env.GIT_COMMIT}"
                 }
             }
         }
