@@ -122,30 +122,30 @@ pipeline {
         }
 
         // Build the Docker image for a tagged release.
+		// Embed release and Git commit metadata for artifact traceability.
         stage('Build Docker Image') {
-            when {
-                buildingTag()
-            }
+			when {
+				buildingTag()
+			}
 
-            steps {
-                sh """
-                    docker build \
-                      -t ${IMAGE_NAME}:${IMAGE_TAG} \
-                      -f docker/backend/Dockerfile \
-                      app/backend
-                """
-            }
+			steps {
+				sh """
+					docker build \
+					  --build-arg VERSION=${IMAGE_TAG} \
+					  --build-arg GIT_COMMIT=${GIT_COMMIT} \
+					  --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+					  -t ${IMAGE_NAME}:${IMAGE_TAG} \
+					  -f docker/backend/Dockerfile \
+					  app/backend
+				"""
+			}
 
-            post {
-                success {
-                    echo '✅ Docker image built successfully.'
-                }
-
-                failure {
-                    echo '❌ Docker image build failed.'
-                }
-            }
-        }
+			post {
+				success {
+					echo "🐳 Docker image built successfully."
+				}
+			}
+		}
 
         // Verify that the versioned Docker artifact exists locally.
         stage('Verify Docker Artifact') {
