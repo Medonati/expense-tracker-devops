@@ -5,8 +5,8 @@ ARG GIT_COMMIT
 ARG BUILD_DATE
 
 LABEL org.opencontainers.image.version="${VERSION}" \
-LABEL org.opencontainers.image.revision="${GIT_COMMIT}" \
-LABEL org.opencontainers.image.created="${BUILD_DATE}"
+      org.opencontainers.image.revision="${GIT_COMMIT}" \
+      org.opencontainers.image.created="${BUILD_DATE}"
 
 WORKDIR /app
 
