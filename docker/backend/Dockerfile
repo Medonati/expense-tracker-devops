@@ -1,4 +1,4 @@
-FROM node:22
+FROM node:22-slim
 
 ARG VERSION
 ARG GIT_COMMIT
@@ -12,8 +12,8 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --omit=dev
 
 COPY . .
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]
