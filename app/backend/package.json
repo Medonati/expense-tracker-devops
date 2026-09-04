@@ -5,7 +5,7 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "start": "APP_ENV=local node server.js",
+    "start": "node server.js",
     "dev": "APP_ENV=local nodemon server.js",
     "validate": "node --check app.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
