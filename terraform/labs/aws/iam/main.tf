@@ -109,7 +109,9 @@ data "aws_iam_policy_document" "terraform_execution" {
       "ec2:Describe*",
       "ec2:CreateTags",
       "ec2:DeleteTags",
-      "ec2:ModifyNetworkInterfaceAttribute"
+      "ec2:ModifyNetworkInterfaceAttribute",
+      "ec2:ModifyNetworkInterfaceAttribute",
+      "ec2:DeleteKeyPair"
     ]
 
     resources = ["*"]
@@ -178,7 +180,12 @@ data "aws_iam_policy_document" "terraform_execution" {
 
       # Instance profiles
       "iam:GetInstanceProfile",
-      "iam:ListInstanceProfilesForRole"
+      "iam:ListInstanceProfilesForRole",
+      "iam:RemoveRoleFromInstanceProfile",
+      "iam:DetachRolePolicy",
+      "iam:DeletePolicy",
+      "iam:DeleteInstanceProfile",
+      "iam:DeleteRole"
     ]
 
     resources = ["*"]
