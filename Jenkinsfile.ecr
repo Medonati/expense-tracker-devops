@@ -1,0 +1,239 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION = 'us-east-1'
+        ECR_REGISTRY = '748241639517.dkr.ecr.us-east-1.amazonaws.com'
+
+        BACKEND_REPOSITORY = 'expense-tracker-dev-backend'
+        FRONTEND_REPOSITORY = 'expense-tracker-dev-frontend'
+    }
+
+    tools {
+        nodejs 'node22'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Medonati/expense-tracker-devops.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir('app/backend') {
+                    sh 'npm ci'
+                }
+            }
+        }
+
+        stage('Verify Environment') {
+            steps {
+                sh 'node --version'
+                sh 'npm --version'
+                sh 'docker --version'
+                sh 'aws --version'
+            }
+        }
+
+        stage('Validate Source') {
+            steps {
+                dir('app/backend') {
+                    sh 'npm run validate'
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                dir('app/backend') {
+                    sh 'npm test'
+                }
+            }
+        }
+
+        stage('Determine Release Version') {
+            when {
+                buildingTag()
+            }
+
+            steps {
+                script {
+                    def gitTag = sh(
+                        script: 'git describe --tags --exact-match',
+                        returnStdout: true
+                    ).trim()
+
+                    if (!gitTag.startsWith('v')) {
+                        error "Expected a release tag starting with 'v', but found: ${gitTag}"
+                    }
+
+                    env.IMAGE_TAG = gitTag.substring(1)
+
+                    // Use the short commit SHA for the Docker tag.
+                    env.GIT_SHA = sh(
+                        script: 'git rev-parse --short=7 HEAD',
+                        returnStdout: true
+                    ).trim()
+
+                    // Keep the full commit SHA for traceability.
+                    env.GIT_COMMIT = sh(
+                        script: 'git rev-parse HEAD',
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Release tag: ${gitTag}"
+                    echo "Image tag: ${env.IMAGE_TAG}"
+                    echo "Git SHA: ${env.GIT_SHA}"
+                }
+            }
+        }
+
+        stage('Build Backend Image') {
+            when {
+                buildingTag()
+            }
+
+            steps {
+                sh '''
+                    docker build \
+                      --build-arg VERSION="$IMAGE_TAG" \
+                      --build-arg GIT_COMMIT="$GIT_COMMIT" \
+                      --build-arg BUILD_DATE="$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+                      -t "$BACKEND_REPOSITORY:$IMAGE_TAG" \
+                      -t "$BACKEND_REPOSITORY:$GIT_SHA" \
+                      -f docker/backend/Dockerfile \
+                      app/backend
+                '''
+            }
+        }
+
+        stage('Build Frontend Image') {
+            when {
+                buildingTag()
+            }
+
+            steps {
+                sh '''
+                    docker build \
+                      -t "$FRONTEND_REPOSITORY:$IMAGE_TAG" \
+                      -t "$FRONTEND_REPOSITORY:$GIT_SHA" \
+                      -f docker/frontend/Dockerfile \
+                      app/frontend
+                '''
+            }
+        }
+
+        stage('Verify Docker Artifacts') {
+            when {
+                buildingTag()
+            }
+
+            steps {
+                sh '''
+                    docker image inspect "$BACKEND_REPOSITORY:$IMAGE_TAG"
+                    docker image inspect "$BACKEND_REPOSITORY:$GIT_SHA"
+
+                    docker image inspect "$FRONTEND_REPOSITORY:$IMAGE_TAG"
+                    docker image inspect "$FRONTEND_REPOSITORY:$GIT_SHA"
+                '''
+            }
+        }
+
+        stage('Login to ECR') {
+            when {
+                buildingTag()
+            }
+
+            steps {
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'jenkins-ecr-aws']
+                ]) {
+                    sh '''
+                        aws ecr get-login-password \
+                          --region "$AWS_REGION" | \
+                        docker login \
+                          --username AWS \
+                          --password-stdin "$ECR_REGISTRY"
+                    '''
+                }
+            }
+        }
+
+        stage('Tag Images for ECR') {
+            when {
+                buildingTag()
+            }
+
+            steps {
+                sh '''
+                    docker tag \
+                      "$BACKEND_REPOSITORY:$IMAGE_TAG" \
+                      "$ECR_REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG"
+
+                    docker tag \
+                      "$BACKEND_REPOSITORY:$GIT_SHA" \
+                      "$ECR_REGISTRY/$BACKEND_REPOSITORY:$GIT_SHA"
+
+                    docker tag \
+                      "$FRONTEND_REPOSITORY:$IMAGE_TAG" \
+                      "$ECR_REGISTRY/$FRONTEND_REPOSITORY:$IMAGE_TAG"
+
+                    docker tag \
+                      "$FRONTEND_REPOSITORY:$GIT_SHA" \
+                      "$ECR_REGISTRY/$FRONTEND_REPOSITORY:$GIT_SHA"
+                '''
+            }
+        }
+
+        stage('Push Backend to ECR') {
+            when {
+                buildingTag()
+            }
+
+            steps {
+                sh '''
+                    docker push \
+                      "$ECR_REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG"
+
+                    docker push \
+                      "$ECR_REGISTRY/$BACKEND_REPOSITORY:$GIT_SHA"
+                '''
+            }
+        }
+
+        stage('Push Frontend to ECR') {
+            when {
+                buildingTag()
+            }
+
+            steps {
+                sh '''
+                    docker push \
+                      "$ECR_REGISTRY/$FRONTEND_REPOSITORY:$IMAGE_TAG"
+
+                    docker push \
+                      "$ECR_REGISTRY/$FRONTEND_REPOSITORY:$GIT_SHA"
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '🎉 ECR release pipeline completed successfully.'
+        }
+
+        failure {
+            echo '❌ ECR release pipeline failed.'
+        }
+
+        always {
+            echo 'Pipeline execution finished.'
+        }
+    }
+}
