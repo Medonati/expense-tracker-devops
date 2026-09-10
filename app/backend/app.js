@@ -12,7 +12,7 @@ const app = express();
 const allowedOrigins = [
   "https://main.d1sj7cd70hlter.amplifyapp.com",
   "https://expense-tracker-app-three-beryl.vercel.app",
-  // Add more origins as needed
+  "http://localhost:3001",
 ];
 
 // Middleware
