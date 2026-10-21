@@ -1,0 +1,69 @@
+
+services:
+  # ==========================================
+  # PROMETHEUS - Metrics Collection and Storage
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=3d"
+    restart: unless-stopped
+    networks:
+      - default
+      - expense-tracker-network
+
+  # ==========================================
+  # NODE EXPORTER - Host System Metrics
+  # ==========================================
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/host/root"
+      - "--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|host|etc)($|/)"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+
+  # ==========================================
+  # GRAFANA - Metrics Visualization
+  # ==========================================
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    ports:
+      - "3002:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+
+# ==========================================
+# PERSISTENT STORAGE
+# ==========================================
+volumes:
+  prometheus-data:
+    external: true
+    name: monitoring_prometheus-data
+  grafana-data:
+    external: true
+    name: monitoring_grafana-data
+
+networks:
+  expense-tracker-network:
+    external: true
+    name: expense-tracker-devops_default

@@ -6,6 +6,12 @@ import helmet from "helmet";
 import morgan from "morgan";
 import transactionRoutes from "./Routers/Transactions.js";
 import userRoutes from "./Routers/userRouter.js";
+import {
+  register,
+  httpRequestsTotal,
+  httpRequestDurationSeconds,
+  prometheusContentType,
+} from "./monitoring/metrics.js";
 
 const app = express();
 
@@ -31,13 +37,56 @@ app.use(morgan("dev"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
+// Prometheus HTTP metrics middleware
+app.use((req, res, next) => {
+  const start = process.hrtime.bigint();
+
+  res.on("finish", () => {
+    const durationSeconds =
+      Number(process.hrtime.bigint() - start) / 1e9;
+
+    const route = req.route?.path
+      ? `${req.baseUrl}${req.route.path}`
+      : req.path === "/metrics"
+        ? "/metrics"
+        : "unmatched";
+
+    const labels = {
+      method: req.method,
+      route,
+    };
+
+    httpRequestsTotal.inc({
+      ...labels,
+      status_code: String(res.statusCode),
+    });
+
+    httpRequestDurationSeconds.observe(labels, durationSeconds);
+  });
+
+  next();
+});
+
+
 // Routes
 app.use("/api/v1", transactionRoutes);
 app.use("/api/auth", userRoutes);
 
+// Prometheus metrics endpoint
+app.get("/metrics", async (req, res) => {
+  try {
+    res.set("Content-Type", prometheusContentType);
+    res.end(await register.metrics());
+  } catch (error) {
+    console.error("Failed to collect Prometheus metrics:", error);
+    res.status(500).send("Failed to collect metrics");
+  }
+});
+
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
+
 
 // Health Check
 app.get("/health", (req, res) => {

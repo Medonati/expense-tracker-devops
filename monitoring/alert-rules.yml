@@ -1,0 +1,11 @@
+groups:
+  - name: host-monitoring
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 * (1 - avg by(instance, cpu) (rate(node_cpu_seconds_total{mode="idle"}[5m]))) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }} CPU {{ $labels.cpu }}"
+          description: "CPU usage has exceeded 80% for 5 minutes."
