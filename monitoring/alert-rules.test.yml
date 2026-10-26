@@ -1,0 +1,36 @@
+rule_files:
+  - alert-rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  - name: CPU usage below threshold stays inactive
+    interval: 1m
+    input_series:
+      - series: 'node_cpu_seconds_total{instance="node-exporter:9100",cpu="0",mode="idle"}'
+        values: '0+12x10'
+      - series: 'node_cpu_seconds_total{instance="node-exporter:9100",cpu="0",mode="user"}'
+        values: '0+3x10'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: HighCPUUsage
+        exp_alerts: []
+
+  - name: Sustained high CPU usage fires alert
+    interval: 1m
+    input_series:
+      - series: 'node_cpu_seconds_total{instance="node-exporter:9100",cpu="0",mode="idle"}'
+        values: '0+1x15'
+      - series: 'node_cpu_seconds_total{instance="node-exporter:9100",cpu="0",mode="user"}'
+        values: '0+9x15'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: HighCPUUsage
+        exp_alerts:
+          - exp_labels:
+              instance: node-exporter:9100
+              cpu: "0"
+              severity: warning
+            exp_annotations:
+              summary: "High CPU usage on node-exporter:9100 CPU 0"
+              description: "CPU usage has exceeded 80% for 5 minutes."

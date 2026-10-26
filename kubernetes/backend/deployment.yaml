@@ -23,7 +23,7 @@ spec:
 
       containers:
         - name: backend
-          image: 748241639517.dkr.ecr.us-east-1.amazonaws.com/expense-tracker-dev-backend:1.0.4
+          image: 748241639517.dkr.ecr.us-east-1.amazonaws.com/expense-tracker-dev-backend:1.0.6
 
           env:
             - name: PORT
