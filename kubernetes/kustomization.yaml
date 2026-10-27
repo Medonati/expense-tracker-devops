@@ -13,3 +13,10 @@ resources:
   - mongodb/service.yaml
   - mongodb/pvc.yaml
 
+
+images:
+  - name: 748241639517.dkr.ecr.us-east-1.amazonaws.com/expense-tracker-dev-backend
+    newTag: "1.0.6"
+  - name: 748241639517.dkr.ecr.us-east-1.amazonaws.com/expense-tracker-dev-frontend
+    newTag: "1.0.4"
+
