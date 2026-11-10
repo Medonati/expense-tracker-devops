@@ -12,7 +12,7 @@ resources:
   - mongodb/deployment.yaml
   - mongodb/service.yaml
   - mongodb/pvc.yaml
-
+  - gitops-pruning-demo.yaml
 
 images:
   - name: 748241639517.dkr.ecr.us-east-1.amazonaws.com/expense-tracker-dev-backend
