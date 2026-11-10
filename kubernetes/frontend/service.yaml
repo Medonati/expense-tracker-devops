@@ -5,6 +5,7 @@ metadata:
   name: frontend
   annotations:
     gitops-demo: "milestone-5-change-detection"
+    gitops-demo-auto-sync: "milestone-6-automatic-reconciliation"
 
 spec:
   selector:
