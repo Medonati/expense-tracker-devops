@@ -22,7 +22,7 @@ spec:
     metadata:
       labels:
         app: frontend
-        rollout-experiment: "m08"
+        rollout-experiment: "m09"
 
     spec:
       containers:
