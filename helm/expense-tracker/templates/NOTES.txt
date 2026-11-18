@@ -1,0 +1,11 @@
+Expense Tracker Helm chart
+
+Frontend: frontend:{{ .Values.frontend.service.port }}
+Backend: backend:{{ .Values.backend.service.port }}
+MongoDB: mongodb:{{ .Values.mongodb.service.port }}
+
+Ingress host: {{ .Values.frontend.ingress.host }}
+
+This chart references existing Kubernetes Secrets:
+- {{ .Values.backend.secret.existingSecret }}
+- ecr-secret

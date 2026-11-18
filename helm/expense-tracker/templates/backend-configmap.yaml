@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  labels:
+    {{- include "expense-tracker.labels" . | nindent 4 }}
+data:
+  PORT: {{ .Values.backend.config.port | quote }}
+  MONGO_URL: {{ .Values.backend.config.mongoUrl | quote }}

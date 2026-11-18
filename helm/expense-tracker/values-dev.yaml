@@ -1,0 +1,11 @@
+frontend:
+  replicaCount: 2
+  ingress:
+    enabled: false
+
+backend:
+  replicaCount: 1
+
+mongodb:
+  persistence:
+    size: 1Gi

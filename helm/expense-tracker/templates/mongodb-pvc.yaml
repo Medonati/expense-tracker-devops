@@ -1,0 +1,16 @@
+{{- if .Values.mongodb.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-pvc
+  labels:
+    {{- include "expense-tracker.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  accessModes:
+    - {{ .Values.mongodb.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.mongodb.persistence.size }}
+{{- end }}

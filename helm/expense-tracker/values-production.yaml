@@ -1,0 +1,9 @@
+frontend:
+  replicaCount: 3
+
+backend:
+  replicaCount: 2
+
+mongodb:
+  persistence:
+    size: 5Gi

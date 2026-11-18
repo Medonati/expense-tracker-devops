@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    {{- include "expense-tracker.labels" . | nindent 4 }}
+    app: backend
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+        {{- include "expense-tracker.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: PORT
+            - name: MONGO_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: MONGO_URL
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.secret.existingSecret }}
+                  key: {{ .Values.backend.secret.secretKey }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.backend.probes.startup.path }}
+              port: 3000
+            periodSeconds: {{ .Values.backend.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.backend.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.backend.probes.startup.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.backend.probes.readiness.path }}
+              port: 3000
+            periodSeconds: {{ .Values.backend.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.backend.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.backend.probes.readiness.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.backend.probes.liveness.path }}
+              port: 3000
+            periodSeconds: {{ .Values.backend.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.backend.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.backend.probes.liveness.failureThreshold }}
